@@ -1,22 +1,57 @@
 # KeyboardMixer
-KeyboardMixer allows you to change specific application volumes using keyboard volume controls.
 
-By holding Ctrl while using the keyboard volume wheel or button, KeyboardMixer will change only the volume of the currently focused application.
+Change the volume of individual Windows apps with your keyboard's volume keys.
 
-You can also add two custom applications to change the volume of, which will trigger when holding Ctrl+Shift or Ctrl+Alt respectively. To change these, add the name of the application's .exe file into the text field as shown.
+- **Ctrl + Volume Up/Down** changes the volume of the app you're using; **Ctrl + Mute** mutes or unmutes it.
+- **Your own shortcuts** (for example Ctrl + Shift + Volume) always control one specific app, such as your music player or voice chat, whatever window is focused. They work with the Mute key too.
+- The volume and mute keys on their own still control the main Windows volume.
+- **No volume keys?** Any shortcut can use other keys instead, for example Ctrl + Alt + F9 / F10 / F11 for down, up and mute.
 
-![Application Window](https://i.imgur.com/55VAmCT.png "Application Window")  ![Keyboard](https://i.imgur.com/jWiJCiS.png "Keyboard")
+A small Windows 11-style flyout shows the app, its icon and its new volume level. KeyboardMixer runs quietly in the system tray and can start with Windows.
 
-While changing an application's volume, a small indicator will appear temporarily, showing the application volume in a manner to the Windows master volume slider. The location of this slider is configurable in the settings.
+## Using it
 
+Open settings from the tray icon (left-click, or right-click → **Open settings**). Everything is on one page:
 
+- **Shortcuts**: the focused-app shortcut, plus your app shortcuts. Add one by picking from the apps currently playing audio, typing a program name, or browsing for an `.exe`. Each shortcut uses the volume keys by default; click a key in the shortcut dialog to record a different one.
+- **Volume and flyout**: volume step (1–25%), flyout monitor and position, with a preview button.
+- **Startup**: start with Windows, start minimized.
+- **About**: version and settings file location.
 
-![Slider](https://i.imgur.com/3FJlQb9.gif "Slider")
-<br>
+Right-click the tray icon to **pause** all shortcuts or **exit**.
 
-------------
+If a shortcut shows a ⚠ warning, another program already owns that key combination; choose different keys.
 
+## How it works
+
+- **Shortcuts use `RegisterHotKey`**, not a low-level keyboard hook. Windows only fires a hotkey on an exact modifier match and swallows the key, so there is no hook that Windows can silently remove, no key state to get "stuck", and Ctrl and Ctrl+Shift shortcuts never overlap. Each shortcut is modifiers (Ctrl, Alt, Shift, Win; left and right count the same) plus one key per action. Holding a non-modifier key (like CapsLock + Volume) isn't possible with `RegisterHotKey` and would need a keyboard hook, so it isn't supported. F13–F24 can be used without modifiers; other keys need at least one so they don't take over typing or the normal volume keys.
+- **Volume** goes through the Windows Core Audio session API on a dedicated background thread. Sessions are collected from *every* active playback device and grouped by executable name, so multi-process apps (browsers, Discord, Spotify) change together.
+- **Settings** are stored as JSON in `%LocalAppData%\KeyboardMixer\settings.json`. Diagnostics go to `log.txt` in the same folder.
+
+## Building
+
+Requirements: Windows 10 19041+ and the [.NET 10 SDK](https://dotnet.microsoft.com/download). Visual Studio is optional.
+
+```powershell
+dotnet build                                   # whole solution (app builds as x64)
+dotnet test tests/KeyboardMixer.Core.Tests     # unit tests
+dotnet run --project src/KeyboardMixer         # launch the app
+```
+
+The app is a WinUI 3 app (Windows App SDK 1.8), **unpackaged and self-contained**: the build output folder runs as-is, with no MSIX or installer. To make a folder you can zip and share:
+
+```powershell
+dotnet publish src/KeyboardMixer -c Release -p:Platform=x64 --self-contained -o publish
+```
+
+### Layout
+
+```
+src/KeyboardMixer.Core/    Audio sessions, settings, shortcut model/validation, placement math (no UI, unit-tested)
+src/KeyboardMixer/         WinUI 3 app: tray icon, hotkeys, flyout, settings window
+tests/                     xUnit tests for KeyboardMixer.Core
+```
 
 ### Download
 
-Download the latest version from the [releases page](https://github.com/MrTroot/KeyboardMixer/releases/ "releases page").
+Get the latest version from the [releases page](https://github.com/troyhayes/KeyboardMixer/releases/).
