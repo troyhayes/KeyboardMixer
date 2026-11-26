@@ -17,18 +17,23 @@ public partial class App : Application
     private const int MenuExit = 3;
 
     private readonly EventWaitHandle _activateEvent;
+    private readonly EventWaitHandle _exitEvent;
     private readonly bool _startMinimized;
+    private readonly bool _forceShow;
     private RegisteredWaitHandle? _activateWait;
+    private RegisteredWaitHandle? _exitWait;
     private DispatcherQueue _dispatcher = null!;
     private NativeHostWindow _host = null!;
     private TrayIcon _tray = null!;
     private MainWindow? _mainWindow;
     private bool _exiting;
 
-    public App(EventWaitHandle activateEvent, bool startMinimized)
+    public App(EventWaitHandle activateEvent, EventWaitHandle exitEvent, bool startMinimized, bool forceShow)
     {
         _activateEvent = activateEvent;
+        _exitEvent = exitEvent;
         _startMinimized = startMinimized;
+        _forceShow = forceShow;
         InitializeComponent();
 
         // We live in the tray: closing the settings window must not end the process.
@@ -77,7 +82,11 @@ public partial class App : Application
         _activateWait = ThreadPool.RegisterWaitForSingleObject(
             _activateEvent, (_, _) => _dispatcher.TryEnqueue(ShowMainWindow), null, Timeout.Infinite, executeOnlyOnce: false);
 
-        if (!_startMinimized && !Settings.Current.LaunchMinimized)
+        // "KeyboardMixer.exe --exit" (used by the installer before upgrading or uninstalling).
+        _exitWait = ThreadPool.RegisterWaitForSingleObject(
+            _exitEvent, (_, _) => _dispatcher.TryEnqueue(ExitApp), null, Timeout.Infinite, executeOnlyOnce: true);
+
+        if (_forceShow || (!_startMinimized && !Settings.Current.LaunchMinimized))
             ShowMainWindow();
     }
 
@@ -117,6 +126,7 @@ public partial class App : Application
         _exiting = true;
 
         _activateWait?.Unregister(null);
+        _exitWait?.Unregister(null);
         _mainWindow?.Close();
         Flyout.Close();
         Hotkeys.Dispose();

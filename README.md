@@ -36,6 +36,10 @@ If a shortcut shows a ⚠ warning, another program already owns that key combina
 - **Volume** goes through the Windows Core Audio session API on a dedicated background thread. Sessions are collected from *every* active playback device and grouped by executable name, so multi-process apps (browsers, Discord, Spotify) change together.
 - **Settings** are stored as JSON in `%LocalAppData%\KeyboardMixer\settings.json`. Diagnostics go to `log.txt` in the same folder.
 
+## Installing
+
+Download `KeyboardMixer-Setup-<version>.exe` from the [releases page](https://github.com/troyhayes/KeyboardMixer/releases/) and run it. It installs just for you (no admin prompt) to `%LocalAppData%\KeyboardMixer\app`, adds a Start menu shortcut, and lets you choose whether KeyboardMixer starts with Windows and whether it opens in the tray. To update, download the newer setup and run it: it closes KeyboardMixer if it's running, replaces it in place and keeps your settings and shortcuts. Uninstall from **Settings → Apps** removes the app but keeps your settings file (`%LocalAppData%\KeyboardMixer\settings.json`), so reinstalling brings your shortcuts back.
+
 ## Building
 
 Requirements: Windows 10 19041+ and the [.NET 10 SDK](https://dotnet.microsoft.com/download). Visual Studio is optional.
@@ -46,20 +50,29 @@ dotnet test tests/KeyboardMixer.Core.Tests     # unit tests
 dotnet run --project src/KeyboardMixer         # launch the app
 ```
 
-The app is a WinUI 3 app (Windows App SDK 1.8), **unpackaged and self-contained**: the build output folder runs as-is, with no MSIX or installer. To make a folder you can zip and share:
+The app is a WinUI 3 app (Windows App SDK 1.8), **unpackaged and self-contained**: the build output folder runs as-is, with no MSIX. Release builds are also trimmed, and leave out the parts of the Windows App SDK the app doesn't use (its AI/ML runtime and Widgets), so the published app is about 80 MB instead of over 200 MB.
+
+To build the installer (needs [Inno Setup 6](https://jrsoftware.org/isinfo.php): `winget install JRSoftware.InnoSetup`):
 
 ```powershell
-dotnet publish src/KeyboardMixer -c Release -p:Platform=x64 --self-contained -o publish
+./build-installer.ps1      # → artifacts\KeyboardMixer-Setup-<version>.exe (~21 MB)
 ```
+
+For a new release, bump `<Version>` in `Directory.Build.props` first; the installer takes its version from the app.
+
+Or just the app folder, to zip and share:
+
+```powershell
+dotnet publish src/KeyboardMixer -c Release -p:Platform=x64 -o publish
+```
+
+The installer talks to the app through command-line options: `--setup [--startup] [--minimized]` applies the install choices, `--exit` closes a running copy, `--uninstall` removes the startup entry, and `--show` opens the settings window.
 
 ### Layout
 
 ```
 src/KeyboardMixer.Core/    Audio sessions, settings, shortcut model/validation, placement math (no UI, unit-tested)
 src/KeyboardMixer/         WinUI 3 app: tray icon, hotkeys, flyout, settings window
+installer/                 Inno Setup script
 tests/                     xUnit tests for KeyboardMixer.Core
 ```
-
-### Download
-
-Get the latest version from the [releases page](https://github.com/troyhayes/KeyboardMixer/releases/).

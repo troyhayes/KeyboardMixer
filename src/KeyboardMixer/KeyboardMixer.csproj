@@ -27,15 +27,64 @@
     <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
   </PropertyGroup>
 
+  <!--
+    Release builds are self-contained and trimmed (unused .NET and Windows SDK code removed),
+    which takes the published folder from ~170 MB to ~80 MB.
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>true</PublishTrimmed>
+    <!-- NAudio talks to Core Audio through classic [ComImport] interfaces. -->
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <!-- Only ship English resources for .NET's own satellite assemblies. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Keep NAudio whole: trimming unused methods off its COM interface declarations shifts the
+      vtable slots, and calls land on the wrong native method (crash in GetSessionEnumerator).
+    -->
+    <TrimmerRootAssembly Include="NAudio.Wasapi" />
+    <TrimmerRootAssembly Include="NAudio.Core" />
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="Assets\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.AI" Version="1.8.79" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.ML" Version="1.8.2223" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Widgets" Version="1.8.251231004" ExcludeAssets="all" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
   </ItemGroup>
+
+  <!--
+    Trim the Windows App SDK. Its metapackage also ships Microsoft's on-device AI/ML runtime
+    (onnxruntime, DirectML, Windows AI APIs) and Widgets. This app uses none of them, but the
+    self-contained build copies them all (~50 MB). The PackageReferences below drop their managed
+    projections; this target excludes their native files using the SDK's own exclusion list.
+  -->
+  <Target Name="ExcludeUnusedWindowsAppSDKFiles"
+          BeforeTargets="AddMicrosoftWindowsAppSDKPayloadFilesFromMsix"
+          DependsOnTargets="ExtractMicrosoftWindowsAppSDKMsixFiles"
+          Condition="'$(MicrosoftWindowsAppSDKMsixContent)' != ''">
+    <ItemGroup>
+      <MicrosoftWindowsAppSDKFilesExcluded Include="$(MicrosoftWindowsAppSDKMsixContent)\onnxruntime*.dll" />
+      <MicrosoftWindowsAppSDKFilesExcluded Include="$(MicrosoftWindowsAppSDKMsixContent)\DirectML.dll" />
+      <MicrosoftWindowsAppSDKFilesExcluded Include="$(MicrosoftWindowsAppSDKMsixContent)\Microsoft.Windows.AI*" />
+      <MicrosoftWindowsAppSDKFilesExcluded Include="$(MicrosoftWindowsAppSDKMsixContent)\Microsoft.Windows.*Vision*" />
+      <MicrosoftWindowsAppSDKFilesExcluded Include="$(MicrosoftWindowsAppSDKMsixContent)\Microsoft.Windows.SemanticSearch*" />
+      <MicrosoftWindowsAppSDKFilesExcluded Include="$(MicrosoftWindowsAppSDKMsixContent)\Microsoft.Windows.*Workloads*" />
+      <MicrosoftWindowsAppSDKFilesExcluded Include="$(MicrosoftWindowsAppSDKMsixContent)\workloads*.json" />
+      <MicrosoftWindowsAppSDKFilesExcluded Include="$(MicrosoftWindowsAppSDKMsixContent)\Microsoft.Graphics.*Imaging*" />
+      <MicrosoftWindowsAppSDKFilesExcluded Include="$(MicrosoftWindowsAppSDKMsixContent)\Microsoft.Windows.Widgets*" />
+      <MicrosoftWindowsAppSDKFilesExcluded Include="$(MicrosoftWindowsAppSDKMsixContent)\NpuDetect\**" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\KeyboardMixer.Core\KeyboardMixer.Core.csproj" />
