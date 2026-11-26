@@ -9,6 +9,14 @@ Change the volume of individual Windows apps with your keyboard's volume keys.
 
 A small Windows 11-style flyout shows the app, its icon and its new volume level. KeyboardMixer runs quietly in the system tray and can start with Windows.
 
+<p align="center">
+  <img src="docs/flyout.png" alt="The volume flyout showing Discord at 60%" width="475">
+</p>
+
+<p align="center">
+  <img src="docs/settings.png" alt="The KeyboardMixer settings window with shortcuts for the focused app, Discord and Firefox" width="600">
+</p>
+
 ## Using it
 
 Open settings from the tray icon (left-click, or right-click → **Open settings**). Everything is on one page:
