@@ -41,7 +41,9 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.19041
 
 OutputDir=..\artifacts
-OutputBaseFilename={#AppName}-Setup-{#AppVersion}
+; Fixed name (no version) so the README can link to
+; https://github.com/troyhayes/KeyboardMixer/releases/latest/download/KeyboardMixer-Setup.exe
+OutputBaseFilename={#AppName}-Setup
 SetupIconFile=..\src\KeyboardMixer\Assets\icon.ico
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}

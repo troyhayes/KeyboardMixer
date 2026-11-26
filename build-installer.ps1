@@ -3,7 +3,8 @@
     Publishes KeyboardMixer (Release, x64, self-contained, trimmed) and builds the installer.
 
 .DESCRIPTION
-    Output: artifacts\KeyboardMixer-Setup-<version>.exe
+    Output: artifacts\KeyboardMixer-Setup.exe (fixed name, so the READMEs
+    "latest/download" link always works; attach it to each GitHub release)
     Requires Inno Setup 6:  winget install JRSoftware.InnoSetup
 #>
 [CmdletBinding()]
@@ -39,6 +40,6 @@ Write-Host "Building installer for $version..." -ForegroundColor Cyan
 & $Iscc /Q "/DAppVersion=$version" "/DPublishDir=$publishDir" (Join-Path $root 'installer\KeyboardMixer.iss')
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
 
-$setup = Join-Path $root "artifacts\KeyboardMixer-Setup-$version.exe"
+$setup = Join-Path $root "artifacts\KeyboardMixer-Setup.exe"
 $appSize = (Get-ChildItem $publishDir -Recurse -File | Measure-Object Length -Sum).Sum / 1MB
 Write-Host ("Done: {0} ({1:N1} MB download, {2:N0} MB installed)" -f $setup, ((Get-Item $setup).Length / 1MB), $appSize) -ForegroundColor Green

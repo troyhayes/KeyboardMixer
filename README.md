@@ -2,6 +2,15 @@
 
 Change the volume of individual Windows apps with your keyboard's volume keys.
 
+<p align="center">
+  <a href="https://github.com/troyhayes/KeyboardMixer/releases/latest/download/KeyboardMixer-Setup.exe"><img src="https://img.shields.io/github/v/release/troyhayes/KeyboardMixer?label=Download%20for%20Windows&style=for-the-badge&logo=windows&color=0078D4" alt="Download KeyboardMixer for Windows" height="40"></a>
+</p>
+
+<p align="center">
+  <b><a href="https://github.com/troyhayes/KeyboardMixer/releases/latest/download/KeyboardMixer-Setup.exe">Download KeyboardMixer-Setup.exe</a></b><br>
+  Windows 10 / 11 (x64) · about 21 MB · no admin rights needed · <a href="https://github.com/troyhayes/KeyboardMixer/releases/latest">release notes</a>
+</p>
+
 - **Ctrl + Volume Up/Down** changes the volume of the app you're using; **Ctrl + Mute** mutes or unmutes it.
 - **Your own shortcuts** (for example Ctrl + Shift + Volume) always control one specific app, such as your music player or voice chat, whatever window is focused. They work with the Mute key too.
 - The volume and mute keys on their own still control the main Windows volume.
@@ -16,6 +25,17 @@ A small Windows 11-style flyout shows the app, its icon and its new volume level
 <p align="center">
   <img src="docs/settings.png" alt="The KeyboardMixer settings window with shortcuts for the focused app, Discord and Firefox" width="600">
 </p>
+
+## Installing
+
+1. [Download **KeyboardMixer-Setup.exe**](https://github.com/troyhayes/KeyboardMixer/releases/latest/download/KeyboardMixer-Setup.exe).
+2. Run it. If Windows shows "Windows protected your PC", click **More info → Run anyway** (the installer isn't code-signed).
+3. Pick whether KeyboardMixer starts with Windows, and you're done.
+
+It installs just for you (no admin prompt) to `%LocalAppData%\KeyboardMixerpp` and adds a Start menu shortcut.
+
+- **Updating:** download the latest setup and run it. It closes KeyboardMixer, replaces it in place, and keeps your settings and shortcuts.
+- **Uninstalling:** use **Settings → Apps**. Your settings file (`%LocalAppData%\KeyboardMixer\settings.json`) is kept, so reinstalling brings your shortcuts back.
 
 ## Using it
 
@@ -36,10 +56,6 @@ If a shortcut shows a ⚠ warning, another program already owns that key combina
 - **Volume** goes through the Windows Core Audio session API on a dedicated background thread. Sessions are collected from *every* active playback device and grouped by executable name, so multi-process apps (browsers, Discord, Spotify) change together.
 - **Settings** are stored as JSON in `%LocalAppData%\KeyboardMixer\settings.json`. Diagnostics go to `log.txt` in the same folder.
 
-## Installing
-
-Download `KeyboardMixer-Setup-<version>.exe` from the [releases page](https://github.com/troyhayes/KeyboardMixer/releases/) and run it. It installs just for you (no admin prompt) to `%LocalAppData%\KeyboardMixer\app`, adds a Start menu shortcut, and lets you choose whether KeyboardMixer starts with Windows and whether it opens in the tray. To update, download the newer setup and run it: it closes KeyboardMixer if it's running, replaces it in place and keeps your settings and shortcuts. Uninstall from **Settings → Apps** removes the app but keeps your settings file (`%LocalAppData%\KeyboardMixer\settings.json`), so reinstalling brings your shortcuts back.
-
 ## Building
 
 Requirements: Windows 10 19041+ and the [.NET 10 SDK](https://dotnet.microsoft.com/download). Visual Studio is optional.
@@ -55,10 +71,10 @@ The app is a WinUI 3 app (Windows App SDK 1.8), **unpackaged and self-contained*
 To build the installer (needs [Inno Setup 6](https://jrsoftware.org/isinfo.php): `winget install JRSoftware.InnoSetup`):
 
 ```powershell
-./build-installer.ps1      # → artifacts\KeyboardMixer-Setup-<version>.exe (~21 MB)
+./build-installer.ps1      # → artifacts\KeyboardMixer-Setup.exe (~21 MB)
 ```
 
-For a new release, bump `<Version>` in `Directory.Build.props` first; the installer takes its version from the app.
+For a new release, bump `<Version>` in `Directory.Build.props` first (the installer takes its version from the app), then attach `KeyboardMixer-Setup.exe` to the GitHub release. Keep that exact file name: the download links in this README point to it on the latest release.
 
 Or just the app folder, to zip and share:
 
